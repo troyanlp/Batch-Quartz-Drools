@@ -62,7 +62,7 @@ public class Config {
 
 	@Bean
 	public BeanWrapperFieldExtractor beanWrapperFieldExtractor() {
-		BeanWrapperFieldExtractor field = new BeanWrapperFieldExtractor();
+		BeanWrapperFieldExtractor<ExamResult> field = new BeanWrapperFieldExtractor();
 		String[] names = { "studentName", "percentage", "dob" };
 		field.setNames(names);
 		return field;
@@ -80,7 +80,7 @@ public class Config {
 	@Bean
 	public ItemWriter<ExamResult> flatFileItemWriter() {
 		FlatFileItemWriter<ExamResult> csvFileWriter = new FlatFileItemWriter<>();
-		csvFileWriter.setResource(new FileSystemResource("csv/examResult.csv"));
+		csvFileWriter.setResource(new FileSystemResource("csv/examResult.txt"));
 		csvFileWriter.setLineAggregator(delimitedLineAgregator());
 		return csvFileWriter;
 	}
