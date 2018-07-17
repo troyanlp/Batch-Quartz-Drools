@@ -15,7 +15,8 @@ public class ExamResultRowMapper implements RowMapper<ExamResult> {
 
 		ExamResult result = new ExamResult();
 		result.setStudentName(rs.getString("student_name"));
-		result.setDob(new LocalDate(rs.getDate("dob")));
+		// result.setDob(new LocalDate(rs.getDate("dob")));
+		result.setDob(new LocalDate(rs.getString("dob")));
 		result.setPercentage(rs.getDouble("percentage"));
 
 		return result;

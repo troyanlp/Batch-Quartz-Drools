@@ -9,7 +9,6 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
@@ -50,15 +49,67 @@ public class Config {
 		return dataSource;
 	}
 
-	@Bean
-	public JdbcCursorItemReader<ExamResult> databseItemReader(DataSource dataSource) {
-		JdbcCursorItemReader<ExamResult> jdbcCursorItemReader = new JdbcCursorItemReader<>();
-		jdbcCursorItemReader.setDataSource(dataSource);
-		jdbcCursorItemReader.setSql("SELECT STUDENT_NAME, DOB, PERCENTAGE FROM EXAM_RESULT");
-		jdbcCursorItemReader.setRowMapper(new ExamResultRowMapper());
-		return jdbcCursorItemReader;
+	// @Bean
+	// public JdbcCursorItemReader<ExamResult> databseItemReader(DataSource
+	// dataSource) {
+	// JdbcCursorItemReader<ExamResult> jdbcCursorItemReader = new
+	// JdbcCursorItemReader<>();
+	// jdbcCursorItemReader.setDataSource(dataSource);
+	// jdbcCursorItemReader.setSql("SELECT STUDENT_NAME, DOB, PERCENTAGE FROM
+	// EXAM_RESULT");
+	// jdbcCursorItemReader.setRowMapper(new ExamResultRowMapper());
+	// return jdbcCursorItemReader;
+	//
+	// }
 
+	// READER
+
+	@Bean
+	public ExamResultItemReader examResultItemReader() {
+		return new ExamResultItemReader();
 	}
+
+	// @Bean
+	// ItemReader<ExamResult> csvFileItemReader() {
+	// FlatFileItemReader<ExamResult> csvFileReader = new FlatFileItemReader<>();
+	// csvFileReader.setResource(new ClassPathResource("csv/examResult.txt"));
+	// csvFileReader.setLinesToSkip(1);
+	//
+	// LineMapper<ExamResult> studentLineMapper = createStudentLineMapper();
+	// csvFileReader.setLineMapper(studentLineMapper);
+	//
+	// return csvFileReader;
+	// }
+	//
+	// private LineMapper<ExamResult> createStudentLineMapper() {
+	// DefaultLineMapper<ExamResult> studentLineMapper = new DefaultLineMapper<>();
+	//
+	// LineTokenizer studentLineTokenizer = createStudentLineTokenizer();
+	// studentLineMapper.setLineTokenizer(studentLineTokenizer);
+	//
+	// FieldSetMapper<ExamResult> studentInformationMapper =
+	// createStudentInformationMapper();
+	// studentLineMapper.setFieldSetMapper(studentInformationMapper);
+	//
+	// return studentLineMapper;
+	// }
+	//
+	// private LineTokenizer createStudentLineTokenizer() {
+	// DelimitedLineTokenizer studentLineTokenizer = new DelimitedLineTokenizer();
+	// studentLineTokenizer.setDelimiter(",");
+	// studentLineTokenizer.setNames(new String[] { "studentName", "dob",
+	// "percentage" });
+	// return studentLineTokenizer;
+	// }
+	//
+	// private FieldSetMapper<ExamResult> createStudentInformationMapper() {
+	// BeanWrapperFieldSetMapper<ExamResult> studentInformationMapper = new
+	// BeanWrapperFieldSetMapper<>();
+	// studentInformationMapper.setTargetType(ExamResult.class);
+	// return studentInformationMapper;
+	// }
+
+	// END READER
 
 	@Bean
 	public BeanWrapperFieldExtractor beanWrapperFieldExtractor() {
@@ -71,7 +122,7 @@ public class Config {
 	@Bean
 	public DelimitedLineAggregator delimitedLineAgregator() {
 		DelimitedLineAggregator line = new DelimitedLineAggregator();
-		line.setDelimiter("/");
+		line.setDelimiter(",");
 		line.setFieldExtractor(beanWrapperFieldExtractor());
 		return line;
 
@@ -101,9 +152,9 @@ public class Config {
 	}
 
 	@Bean
-	public Step step1(JdbcCursorItemReader<ExamResult> jdbcCursorItemReader,
-			ExamResultItemProcessor examResultItemProcessor, ItemWriter<ExamResult> itemWriter) {
-		return stepBuilderFactory.get("step1").<ExamResult, ExamResult>chunk(10).reader(jdbcCursorItemReader)
+	public Step step1(ExamResultItemReader examResultItemReader, ExamResultItemProcessor examResultItemProcessor,
+			ItemWriter<ExamResult> itemWriter) {
+		return stepBuilderFactory.get("step1").<ExamResult, ExamResult>chunk(10).reader(examResultItemReader)
 				.processor(examResultItemProcessor).writer(itemWriter).build();
 	}
 
