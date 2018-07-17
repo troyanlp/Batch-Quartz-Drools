@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" total="1" passed="1">
+  <reporter-output>
+  </reporter-output>
+  <suite name="Surefire suite" duration-ms="11293" started-at="2018-07-13T10:02:44Z" finished-at="2018-07-13T10:02:56Z">
+    <groups>
+    </groups>
+    <test name="Surefire test" duration-ms="11293" started-at="2018-07-13T10:02:44Z" finished-at="2018-07-13T10:02:56Z">
+      <class name="com.kaviddiss.bootquartz.ApplicationTest">
+        <test-method status="PASS" signature="springTestContextBeforeTestClass()" name="springTestContextBeforeTestClass" is-config="true" duration-ms="17" started-at="2018-07-13T10:02:44Z" finished-at="2018-07-13T10:02:44Z">
+        </test-method>
+        <test-method status="PASS" signature="springTestContextPrepareTestInstance()" name="springTestContextPrepareTestInstance" is-config="true" duration-ms="6173" started-at="2018-07-13T10:02:44Z" depends-on-methods="org.springframework.test.context.testng.AbstractTestNGSpringContextTests.springTestContextBeforeTestClass" finished-at="2018-07-13T10:02:51Z">
+        </test-method>
+        <test-method status="PASS" signature="springTestContextBeforeTestMethod(java.lang.reflect.Method)" name="springTestContextBeforeTestMethod" is-config="true" duration-ms="21" started-at="2018-07-13T10:02:51Z" finished-at="2018-07-13T10:02:51Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[public void com.kaviddiss.bootquartz.ApplicationTest.test() throws java.lang.Exception]]>
+              </value>
+            </param>
+          </params>
+        </test-method>
+        <test-method status="PASS" signature="test()" name="test" duration-ms="5012" started-at="2018-07-13T10:02:51Z" finished-at="2018-07-13T10:02:56Z">
+        </test-method>
+        <test-method status="PASS" signature="springTestContextAfterTestMethod(java.lang.reflect.Method)" name="springTestContextAfterTestMethod" is-config="true" duration-ms="58" started-at="2018-07-13T10:02:56Z" finished-at="2018-07-13T10:02:56Z">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[public void com.kaviddiss.bootquartz.ApplicationTest.test() throws java.lang.Exception]]>
+              </value>
+            </param>
+          </params>
+        </test-method>
+        <test-method status="PASS" signature="springTestContextAfterTestClass()" name="springTestContextAfterTestClass" is-config="true" duration-ms="0" started-at="2018-07-13T10:02:56Z" finished-at="2018-07-13T10:02:56Z">
+        </test-method>
+      </class>
+    </test>
+  </suite>
+</testng-results>

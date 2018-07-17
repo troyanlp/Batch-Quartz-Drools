@@ -1,0 +1,12 @@
+package rules
+
+import com.manuel.bootquartz.model.*
+
+// Aprobamos a los que tienen 80 o más
+rule "Initial rule"
+	salience 20
+	when
+		exam : ExamResult(exam.percentage >= 50);
+	then
+		exam.setPassed(true);
+end
