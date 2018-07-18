@@ -4,7 +4,7 @@ import com.manuel.bootquartz.model.*
 
 // Aprobamos a los que tienen 80 o más
 rule "Age rule"
-	salience 40
+	salience 400
 	when
 		exam : ExamResult();
 	then
@@ -12,10 +12,20 @@ rule "Age rule"
 end
 
 // Aprobamos a los que tienen 80 o más
+rule "Milenial rule"
+	salience 300
+	when
+		exam : ExamResult(exam.milenial == true);
+	then
+		System.out.println("HOLA!");
+		exam.addMilenialBonus(10);
+end
+
+// Aprobamos a los que tienen 80 o más
 rule "Initial rule"
 	salience 20
 	when
-		exam : ExamResult(exam.percentage >= 50);
+		exam : ExamResult(exam.percentage >= 85);
 	then
 		exam.setPassed(true);
 end

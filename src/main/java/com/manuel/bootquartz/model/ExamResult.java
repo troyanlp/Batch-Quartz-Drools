@@ -9,6 +9,7 @@ public class ExamResult {
 	private double percentage;
 	private boolean passed = false;
 	private int age = 0;
+	private boolean milenial = false;
 
 	public String getStudentName() {
 		return studentName;
@@ -24,6 +25,12 @@ public class ExamResult {
 
 	public void setDob(LocalDate dob) {
 		this.dob = dob;
+		if (dob.getYear() >= 1984 && dob.getYear() <= 2000) {
+			System.out.println("HA NACIDO UN MILENIAL!");
+			milenial = true;
+		} else {
+			milenial = false;
+		}
 	}
 
 	public double getPercentage() {
@@ -50,8 +57,16 @@ public class ExamResult {
 	public void calculateAge() {
 		LocalDate now = new LocalDate().now();
 		age = now.getYear() - dob.getYear();
+
 		if ((now.getMonthOfYear() <= dob.getMonthOfYear()) && (now.getDayOfMonth() <= dob.getDayOfMonth()))
 			age--;
+	}
+
+	public void addMilenialBonus(int extra) {
+		System.out.println("MILENIAL!");
+		percentage += extra;
+		if (percentage >= 100)
+			percentage = 100;
 	}
 
 	public int getAge() {
@@ -60,6 +75,14 @@ public class ExamResult {
 
 	public void setAge(int age) {
 		this.age = age;
+	}
+
+	public boolean isMilenial() {
+		return milenial;
+	}
+
+	public void setMilenial(boolean milenial) {
+		this.milenial = milenial;
 	}
 
 }
