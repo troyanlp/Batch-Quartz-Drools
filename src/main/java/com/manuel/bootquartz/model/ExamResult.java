@@ -8,6 +8,7 @@ public class ExamResult {
 	private LocalDate dob;
 	private double percentage;
 	private boolean passed = false;
+	private int age = 0;
 
 	public String getStudentName() {
 		return studentName;
@@ -44,6 +45,21 @@ public class ExamResult {
 
 	public void setPassed(boolean passed) {
 		this.passed = passed;
+	}
+
+	public void calculateAge() {
+		LocalDate now = new LocalDate().now();
+		age = now.getYear() - dob.getYear();
+		if ((now.getMonthOfYear() <= dob.getMonthOfYear()) && (now.getDayOfMonth() <= dob.getDayOfMonth()))
+			age--;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
 	}
 
 }

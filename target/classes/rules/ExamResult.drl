@@ -3,6 +3,15 @@ package rules
 import com.manuel.bootquartz.model.*
 
 // Aprobamos a los que tienen 80 o más
+rule "Age rule"
+	salience 40
+	when
+		exam : ExamResult();
+	then
+		exam.calculateAge();
+end
+
+// Aprobamos a los que tienen 80 o más
 rule "Initial rule"
 	salience 20
 	when

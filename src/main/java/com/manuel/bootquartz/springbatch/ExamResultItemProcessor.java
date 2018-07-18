@@ -17,6 +17,8 @@ public class ExamResultItemProcessor implements ItemProcessor<ExamResult, ExamRe
 
 		service.execute(result);
 
+		System.out.println("Age is: " + result.getAge());
+
 		if (!result.isPassed()) {
 			return null;
 		}
