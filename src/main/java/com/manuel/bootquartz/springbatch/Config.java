@@ -9,6 +9,8 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.ItemPreparedStatementSetter;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.manuel.bootquartz.model.ExamResult;
@@ -111,6 +114,27 @@ public class Config {
 
 	// END READER
 
+	// START WRITTER
+
+	@Autowired
+	NamedParameterJdbcTemplate jdbcTemplate;
+
+	@Bean
+	ItemWriter<ExamResult> DatabaseItemWriter(DataSource dataSource, NamedParameterJdbcTemplate jdbcTemplate) {
+		JdbcBatchItemWriter<ExamResult> databaseItemWriter = new JdbcBatchItemWriter<>();
+		databaseItemWriter.setDataSource(dataSource);
+		databaseItemWriter.setJdbcTemplate(jdbcTemplate);
+
+		databaseItemWriter.setSql("INSERT INTO exam_result(student_name, age, percentage) VALUES (?, ?, ?)");
+
+		ItemPreparedStatementSetter<ExamResult> valueSetter = new ExamResultPreparedStatementSetter();
+		databaseItemWriter.setItemPreparedStatementSetter(valueSetter);
+
+		return databaseItemWriter;
+	}
+
+	// END WRITTER
+
 	@Bean
 	public BeanWrapperFieldExtractor beanWrapperFieldExtractor() {
 		BeanWrapperFieldExtractor<ExamResult> field = new BeanWrapperFieldExtractor();
@@ -131,7 +155,7 @@ public class Config {
 	@Bean
 	public ItemWriter<ExamResult> flatFileItemWriter() {
 		FlatFileItemWriter<ExamResult> csvFileWriter = new FlatFileItemWriter<>();
-		csvFileWriter.setResource(new FileSystemResource("csv/examResult.txt"));
+		csvFileWriter.setResource(new FileSystemResource("output/examResult.txt"));
 		csvFileWriter.setLineAggregator(delimitedLineAgregator());
 		return csvFileWriter;
 	}
@@ -153,9 +177,9 @@ public class Config {
 
 	@Bean
 	public Step step1(ExamResultItemReader examResultItemReader, ExamResultItemProcessor examResultItemProcessor,
-			ItemWriter<ExamResult> itemWriter) {
+			ItemWriter<ExamResult> DatabaseItemWriter) {
 		return stepBuilderFactory.get("step1").<ExamResult, ExamResult>chunk(10).reader(examResultItemReader)
-				.processor(examResultItemProcessor).writer(itemWriter).build();
+				.processor(examResultItemProcessor).writer(DatabaseItemWriter).build();
 	}
 
 	@Bean
