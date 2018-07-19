@@ -104,7 +104,7 @@ public class SchedulerConfig {
 		SimpleTriggerFactoryBean factoryBean = new SimpleTriggerFactoryBean();
 		factoryBean.setJobDetail(jobDetail);
 		factoryBean.setStartDelay(5L);
-		factoryBean.setRepeatInterval(pollFrequencyMs);
+		factoryBean.setRepeatInterval(/* pollFrequencyMs */10000);
 		factoryBean.setRepeatCount(SimpleTrigger.REPEAT_INDEFINITELY);
 		// in case of misfire, ignore all missed triggers and continue :
 		factoryBean.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT);
