@@ -14,6 +14,7 @@ import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
+import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
 import com.manuel.bootquartz.model.ExamResult;
 import com.manuel.bootquartz.service.DroolsService;
@@ -114,7 +116,7 @@ public class Config {
 
 	// END READER
 
-	// START WRITTER
+	// START WRITTER DB
 
 	@Autowired
 	NamedParameterJdbcTemplate jdbcTemplate;
@@ -133,7 +135,29 @@ public class Config {
 		return databaseItemWriter;
 	}
 
-	// END WRITTER
+	// END WRITTER DB
+
+	// START WRITTER XML
+
+	@Bean
+	public Jaxb2Marshaller empMarshaller() {
+		Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+		// Class[] list = new ArrayList<Class>();
+		// list.add(com.manuel.bootquartz.model.ExamResult.class);
+		marshaller.setClassesToBeBound(new Class[] { com.manuel.bootquartz.model.ExamResult.class });
+		return marshaller;
+	}
+
+	@Bean
+	public StaxEventItemWriter<ExamResult> userUnmarshaller() {
+		StaxEventItemWriter<ExamResult> xml = new StaxEventItemWriter<ExamResult>();
+		xml.setResource(new FileSystemResource("output/examResult.xml"));
+		xml.setMarshaller(empMarshaller());
+		xml.setRootTagName("ExamResult");
+		return xml;
+	}
+
+	// END WRITTER XML
 
 	@Bean
 	public BeanWrapperFieldExtractor beanWrapperFieldExtractor() {
@@ -177,9 +201,9 @@ public class Config {
 
 	@Bean
 	public Step step1(ExamResultItemReader examResultItemReader, ExamResultItemProcessor examResultItemProcessor,
-			ItemWriter<ExamResult> DatabaseItemWriter) {
+			StaxEventItemWriter<ExamResult> userUnmarshaller) {
 		return stepBuilderFactory.get("step1").<ExamResult, ExamResult>chunk(10).reader(examResultItemReader)
-				.processor(examResultItemProcessor).writer(DatabaseItemWriter).build();
+				.processor(examResultItemProcessor).writer(userUnmarshaller).build();
 	}
 
 	@Bean

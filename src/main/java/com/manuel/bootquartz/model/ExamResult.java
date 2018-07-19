@@ -1,7 +1,12 @@
 package com.manuel.bootquartz.model;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.joda.time.LocalDate;
 
+@XmlRootElement(name = "ExamResult")
 public class ExamResult {
 
 	private String studentName;
@@ -11,6 +16,7 @@ public class ExamResult {
 	private int age = 0;
 	private boolean milenial = false;
 
+	@XmlElement(name = "StudentName")
 	public String getStudentName() {
 		return studentName;
 	}
@@ -19,6 +25,7 @@ public class ExamResult {
 		this.studentName = studentName;
 	}
 
+	@XmlTransient
 	public LocalDate getDob() {
 		return dob;
 	}
@@ -33,6 +40,7 @@ public class ExamResult {
 		}
 	}
 
+	@XmlElement(name = "Percentage")
 	public double getPercentage() {
 		return percentage;
 	}
@@ -46,6 +54,7 @@ public class ExamResult {
 		return "ExamResult [studentName=" + studentName + ", dob=" + dob + ", percentage=" + percentage + "]";
 	}
 
+	@XmlTransient
 	public boolean isPassed() {
 		return passed;
 	}
@@ -69,6 +78,7 @@ public class ExamResult {
 			percentage = 100;
 	}
 
+	@XmlElement(name = "Age")
 	public int getAge() {
 		return age;
 	}
@@ -77,6 +87,7 @@ public class ExamResult {
 		this.age = age;
 	}
 
+	@XmlElement(name = "BonusMilenial")
 	public boolean isMilenial() {
 		return milenial;
 	}
