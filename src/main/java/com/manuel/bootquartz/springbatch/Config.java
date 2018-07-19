@@ -8,21 +8,24 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.SimpleJobLauncher;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.ItemPreparedStatementSetter;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
-import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import com.manuel.bootquartz.model.ExamResult;
 import com.manuel.bootquartz.service.DroolsService;
@@ -122,6 +125,11 @@ public class Config {
 	NamedParameterJdbcTemplate jdbcTemplate;
 
 	@Bean
+	public PlatformTransactionManager transactionManager() {
+		return new DataSourceTransactionManager(dataSource());
+	}
+
+	@Bean
 	ItemWriter<ExamResult> DatabaseItemWriter(DataSource dataSource, NamedParameterJdbcTemplate jdbcTemplate) {
 		JdbcBatchItemWriter<ExamResult> databaseItemWriter = new JdbcBatchItemWriter<>();
 		databaseItemWriter.setDataSource(dataSource);
@@ -148,14 +156,14 @@ public class Config {
 		return marshaller;
 	}
 
-	@Bean
-	public StaxEventItemWriter<ExamResult> userUnmarshaller() {
-		StaxEventItemWriter<ExamResult> xml = new StaxEventItemWriter<ExamResult>();
-		xml.setResource(new FileSystemResource("output/examResult.xml"));
-		xml.setMarshaller(empMarshaller());
-		xml.setRootTagName("ExamResult");
-		return xml;
-	}
+	// @Bean
+	// public StaxEventItemWriter<ExamResult> userUnmarshaller() {
+	// StaxEventItemWriter<ExamResult> xml = new StaxEventItemWriter<ExamResult>();
+	// xml.setResource(new FileSystemResource("output/examResult.xml"));
+	// xml.setMarshaller(empMarshaller());
+	// xml.setRootTagName("ExamResult");
+	// return xml;
+	// }
 
 	// END WRITTER XML
 
@@ -176,13 +184,13 @@ public class Config {
 
 	}
 
-	@Bean
-	public ItemWriter<ExamResult> flatFileItemWriter() {
-		FlatFileItemWriter<ExamResult> csvFileWriter = new FlatFileItemWriter<>();
-		csvFileWriter.setResource(new FileSystemResource("output/examResult.txt"));
-		csvFileWriter.setLineAggregator(delimitedLineAgregator());
-		return csvFileWriter;
-	}
+	// @Bean
+	// public ItemWriter<ExamResult> flatFileItemWriter() {
+	// FlatFileItemWriter<ExamResult> csvFileWriter = new FlatFileItemWriter<>();
+	// csvFileWriter.setResource(new FileSystemResource("output/examResult.txt"));
+	// csvFileWriter.setLineAggregator(delimitedLineAgregator());
+	// return csvFileWriter;
+	// }
 
 	@Bean
 	public ExamResultJobListener examResultJobListener() {
@@ -201,15 +209,41 @@ public class Config {
 
 	@Bean
 	public Step step1(ExamResultItemReader examResultItemReader, ExamResultItemProcessor examResultItemProcessor,
-			StaxEventItemWriter<ExamResult> userUnmarshaller) {
-		return stepBuilderFactory.get("step1").<ExamResult, ExamResult>chunk(10).reader(examResultItemReader)
-				.processor(examResultItemProcessor).writer(userUnmarshaller).build();
+			ItemWriter<ExamResult> databaseItemWriter) {
+		return stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+				.reader(examResultItemReader).processor(examResultItemProcessor).writer(databaseItemWriter).build();
 	}
 
 	@Bean
 	public Job examResultJob(Step step, ExamResultJobListener examResultJobListener) {
 		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer())
 				.listener(examResultJobListener).flow(step).end().build();
+	}
+
+	@Autowired
+	SimpleAsyncTaskExecutor simpleAsyncTaskExecutor;
+
+	@Bean
+	public SimpleAsyncTaskExecutor SimpleAsyncTaskExecutor() {
+		SimpleAsyncTaskExecutor simpleAsyncTaskExecutor = new SimpleAsyncTaskExecutor();
+		return simpleAsyncTaskExecutor;
+	}
+
+	@Bean
+	public JobRepository jobRepositoryFactoryBean() throws Exception {
+		JobRepositoryFactoryBean jobRepositoryFactoryBean = new JobRepositoryFactoryBean();
+		jobRepositoryFactoryBean.setDatabaseType("MYSQL");
+		jobRepositoryFactoryBean.setDataSource(dataSource());
+		jobRepositoryFactoryBean.setTransactionManager(transactionManager());
+		return jobRepositoryFactoryBean.getObject();
+	}
+
+	@Bean
+	public SimpleJobLauncher simpleJobLauncher() throws Exception {
+		SimpleJobLauncher simpleJobLauncher = new SimpleJobLauncher();
+		simpleJobLauncher.setJobRepository(jobRepositoryFactoryBean());
+		simpleJobLauncher.setTaskExecutor(simpleAsyncTaskExecutor);
+		return simpleJobLauncher;
 	}
 
 }

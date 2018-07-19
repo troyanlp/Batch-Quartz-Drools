@@ -31,8 +31,12 @@ public class ExamResultItemReader implements ItemReader<ExamResult> {
 			lineNumber++;
 			fileContent.remove(0);
 			return exam;
-		} else
+		} else {
+			fileContent.clear();
+			lineNumber = 0;
+			loaded = false;
 			return null;
+		}
 	}
 
 	public void setUp() throws IOException {

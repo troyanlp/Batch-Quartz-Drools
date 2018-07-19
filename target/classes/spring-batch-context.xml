@@ -26,7 +26,7 @@
             value="SELECT STUDENT_NAME, DOB, PERCENTAGE FROM EXAM_RESULT" />
  
         <property name="rowMapper">
-            <bean class="com.kaviddiss.bootquartz.springbatch.ExamResultRowMapper" />
+            <bean class="com.manuel.bootquartz.springbatch.ExamResultRowMapper" />
         </property>
  
     </bean>
@@ -60,11 +60,11 @@
  
  
     <!-- Optional JobExecutionListener to perform business logic before and after the job -->
-    <bean id="jobListener" class="com.kaviddiss.bootquartz.springbatch.ExamResultJobListener" />
-    <bean id="droolService" class="com.kaviddiss.bootquartz.service.DroolsService" />
+    <bean id="jobListener" class="com.manuel.bootquartz.springbatch.ExamResultJobListener" />
+    <bean id="droolService" class="com.manuel.bootquartz.service.DroolsService" />
  
     <!-- Optional ItemProcessor to perform business logic/filtering on the input records -->
-    <bean id="itemProcessor" class="com.kaviddiss.bootquartz.springbatch.ExamResultItemProcessor" />
+    <bean id="itemProcessor" class="com.manuel.bootquartz.springbatch.ExamResultItemProcessor" />
  
     <!-- Step will need a transaction manager -->
     <bean id="transactionManager"
