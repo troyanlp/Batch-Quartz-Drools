@@ -1,5 +1,8 @@
 package com.manuel.bootquartz.springbatch;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
@@ -14,12 +17,16 @@ import org.springframework.batch.core.repository.support.JobRepositoryFactoryBea
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.ItemPreparedStatementSetter;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
+import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -77,46 +84,6 @@ public class Config {
 		return new ExamResultItemReader();
 	}
 
-	// @Bean
-	// ItemReader<ExamResult> csvFileItemReader() {
-	// FlatFileItemReader<ExamResult> csvFileReader = new FlatFileItemReader<>();
-	// csvFileReader.setResource(new ClassPathResource("csv/examResult.txt"));
-	// csvFileReader.setLinesToSkip(1);
-	//
-	// LineMapper<ExamResult> studentLineMapper = createStudentLineMapper();
-	// csvFileReader.setLineMapper(studentLineMapper);
-	//
-	// return csvFileReader;
-	// }
-	//
-	// private LineMapper<ExamResult> createStudentLineMapper() {
-	// DefaultLineMapper<ExamResult> studentLineMapper = new DefaultLineMapper<>();
-	//
-	// LineTokenizer studentLineTokenizer = createStudentLineTokenizer();
-	// studentLineMapper.setLineTokenizer(studentLineTokenizer);
-	//
-	// FieldSetMapper<ExamResult> studentInformationMapper =
-	// createStudentInformationMapper();
-	// studentLineMapper.setFieldSetMapper(studentInformationMapper);
-	//
-	// return studentLineMapper;
-	// }
-	//
-	// private LineTokenizer createStudentLineTokenizer() {
-	// DelimitedLineTokenizer studentLineTokenizer = new DelimitedLineTokenizer();
-	// studentLineTokenizer.setDelimiter(",");
-	// studentLineTokenizer.setNames(new String[] { "studentName", "dob",
-	// "percentage" });
-	// return studentLineTokenizer;
-	// }
-	//
-	// private FieldSetMapper<ExamResult> createStudentInformationMapper() {
-	// BeanWrapperFieldSetMapper<ExamResult> studentInformationMapper = new
-	// BeanWrapperFieldSetMapper<>();
-	// studentInformationMapper.setTargetType(ExamResult.class);
-	// return studentInformationMapper;
-	// }
-
 	// END READER
 
 	// START WRITTER DB
@@ -156,14 +123,14 @@ public class Config {
 		return marshaller;
 	}
 
-	// @Bean
-	// public StaxEventItemWriter<ExamResult> userUnmarshaller() {
-	// StaxEventItemWriter<ExamResult> xml = new StaxEventItemWriter<ExamResult>();
-	// xml.setResource(new FileSystemResource("output/examResult.xml"));
-	// xml.setMarshaller(empMarshaller());
-	// xml.setRootTagName("ExamResult");
-	// return xml;
-	// }
+	@Bean
+	public StaxEventItemWriter<ExamResult> userUnmarshaller() {
+		StaxEventItemWriter<ExamResult> xml = new StaxEventItemWriter<ExamResult>();
+		xml.setResource(new FileSystemResource("output/examResult.xml"));
+		xml.setMarshaller(empMarshaller());
+		xml.setRootTagName("ExamResult");
+		return xml;
+	}
 
 	// END WRITTER XML
 
@@ -184,13 +151,27 @@ public class Config {
 
 	}
 
-	// @Bean
-	// public ItemWriter<ExamResult> flatFileItemWriter() {
-	// FlatFileItemWriter<ExamResult> csvFileWriter = new FlatFileItemWriter<>();
-	// csvFileWriter.setResource(new FileSystemResource("output/examResult.txt"));
-	// csvFileWriter.setLineAggregator(delimitedLineAgregator());
-	// return csvFileWriter;
-	// }
+	@Bean
+	public ItemWriter<ExamResult> flatFileItemWriter() {
+		FlatFileItemWriter<ExamResult> csvFileWriter = new FlatFileItemWriter<>();
+		csvFileWriter.setResource(new FileSystemResource("output/examResult.txt"));
+		csvFileWriter.setLineAggregator(delimitedLineAgregator());
+		return csvFileWriter;
+	}
+
+	@Bean
+	public CompositeItemWriter compositeItemWriter() {
+		List<ItemWriter> writers = new ArrayList<>(3);
+		writers.add(flatFileItemWriter());
+		writers.add(userUnmarshaller());
+		writers.add(DatabaseItemWriter(dataSource(), jdbcTemplate));
+
+		CompositeItemWriter itemWriter = new CompositeItemWriter();
+
+		itemWriter.setDelegates(writers);
+
+		return itemWriter;
+	}
 
 	@Bean
 	public ExamResultJobListener examResultJobListener() {
@@ -207,11 +188,21 @@ public class Config {
 		return new ExamResultItemProcessor();
 	}
 
+	// @Bean
+	// public Step step1(ExamResultItemReader examResultItemReader,
+	// ExamResultItemProcessor examResultItemProcessor,
+	// ItemWriter<ExamResult> databaseItemWriter) {
+	// return
+	// stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult,
+	// ExamResult>chunk(10)
+	// .reader(examResultItemReader).processor(examResultItemProcessor).writer(databaseItemWriter).build();
+	// }
+
 	@Bean
-	public Step step1(ExamResultItemReader examResultItemReader, ExamResultItemProcessor examResultItemProcessor,
-			ItemWriter<ExamResult> databaseItemWriter) {
+	public Step step1() {
 		return stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
-				.reader(examResultItemReader).processor(examResultItemProcessor).writer(databaseItemWriter).build();
+				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
+				.build();
 	}
 
 	@Bean
