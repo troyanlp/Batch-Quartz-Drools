@@ -12,6 +12,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
+import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
 import org.springframework.batch.item.ItemWriter;
@@ -188,6 +189,16 @@ public class Config {
 		return new ExamResultItemProcessor();
 	}
 
+	@Bean
+	public NoOpItemReader noOpItemReader() {
+		return new NoOpItemReader();
+	}
+
+	@Bean
+	public ItemCatchProcessor itemCatchProcessor() {
+		return new ItemCatchProcessor();
+	}
+
 	// @Bean
 	// public Step step1(ExamResultItemReader examResultItemReader,
 	// ExamResultItemProcessor examResultItemProcessor,
@@ -198,17 +209,68 @@ public class Config {
 	// .reader(examResultItemReader).processor(examResultItemProcessor).writer(databaseItemWriter).build();
 	// }
 
+	// @Bean
+	// public Step step1() {
+	// return
+	// stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult,
+	// ExamResult>chunk(10)
+	// .reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
+	// .build();
+	// }
+
 	@Bean
 	public Step step1() {
-		return stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
-				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
+		return stepBuilderFactory.get("Initial Step").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+				.reader(examResultItemReader()).processor(examResultItemProcessor()).listener(promotionListener())
 				.build();
 	}
 
 	@Bean
-	public Job examResultJob(Step step, ExamResultJobListener examResultJobListener) {
+	public ExecutionContextPromotionListener promotionListener() {
+		ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
+
+		listener.setKeys(new String[] { "results" });
+
+		return listener;
+	}
+
+	@Bean
+	public Step step2() {
+		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(userUnmarshaller()).build();
+	}
+	//
+	// @Bean
+	// public Step step3() {
+	// return stepBuilderFactory.get("DB
+	// Step").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+	// .writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
+	// }
+
+	// @Bean
+	// public Job examResultJob(Step step, ExamResultJobListener
+	// examResultJobListener) {
+	// return jobBuilderFactory.get("examResultJob").incrementer(new
+	// RunIdIncrementer())
+	// .listener(examResultJobListener).flow(step).end().build();
+	// }
+
+	@Bean
+	public Job examResultJob() {
+		// return
+		// jobBuilderFactory.get("examResultJob").start(step1()).next(decider()).on("XML").to(step2())
+		// .from(decider()).on("DB").to(step3()).end().build();
 		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer())
-				.listener(examResultJobListener).flow(step).end().build();
+				.listener(examResultJobListener()).start(step1()).next(step2()).build();
+		// return
+		// jobBuilderFactory.get("examResultJob").start(step1()).next(decider()).incrementer(new
+		// RunIdIncrementer())
+		// .listener(examResultJobListener).flow(step).end().build();
+	}
+
+	@Autowired
+	public MyDecider decider() {
+		return new MyDecider();
 	}
 
 	@Autowired
