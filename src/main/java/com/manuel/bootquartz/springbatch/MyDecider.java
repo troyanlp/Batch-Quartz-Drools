@@ -9,14 +9,21 @@ public class MyDecider implements JobExecutionDecider {
 
 	@Override
 	public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
-		String status;
-
-		if (1 == 1) {
+		String status = (String) stepExecution.getExecutionContext().get("writingMode");
+		if (status.compareTo("XML") == 0) {
+			System.out.println("------------------------------");
+			System.out.println("Completed -> Go to step 2");
+			System.out.println("------------------------------");
 			status = "XML";
-		} else {
+		} else if (status.compareTo("DB") == 0) {
+			System.out.println("------------------------------");
+			System.out.println("Completed -> Go to step 3");
+			System.out.println("------------------------------");
 			status = "DB";
 		}
-		return new FlowExecutionStatus(status);
+
+		FlowExecutionStatus flow = new FlowExecutionStatus(status);
+		return flow;
 	}
 
 }

@@ -10,6 +10,8 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
@@ -239,13 +241,14 @@ public class Config {
 		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(userUnmarshaller()).build();
 	}
+
 	//
-	// @Bean
-	// public Step step3() {
-	// return stepBuilderFactory.get("DB
-	// Step").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
-	// .writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
-	// }
+	@Bean
+	public Step step3() {
+		return stepBuilderFactory.get("DBStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+				.reader(noOpItemReader()).processor(itemCatchProcessor())
+				.writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
+	}
 
 	// @Bean
 	// public Job examResultJob(Step step, ExamResultJobListener
@@ -257,15 +260,16 @@ public class Config {
 
 	@Bean
 	public Job examResultJob() {
-		// return
-		// jobBuilderFactory.get("examResultJob").start(step1()).next(decider()).on("XML").to(step2())
-		// .from(decider()).on("DB").to(step3()).end().build();
-		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer())
-				.listener(examResultJobListener()).start(step1()).next(step2()).build();
-		// return
-		// jobBuilderFactory.get("examResultJob").start(step1()).next(decider()).incrementer(new
-		// RunIdIncrementer())
-		// .listener(examResultJobListener).flow(step).end().build();
+		Flow flow1 = new FlowBuilder<Flow>("Flow1").start(step1()).next(decider()) // Note 1
+				.on("XML").to(step3()).from(decider()) // Note 1
+				.on("DB").to(step2()).build();
+		// return jobBuilderFactory.get("examResultJob").incrementer(new
+		// RunIdIncrementer()).start(step1()).next(decider())
+		// .on("DB").to(step2()).next(decider()).on("*").to(step3()).end().build();
+		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer()).start(flow1).build().build();
+		// return jobBuilderFactory.get("examResultJob").incrementer(new
+		// RunIdIncrementer());
+		// .listener(examResultJobListener()).start(step1()).next(step2()).build();
 	}
 
 	@Autowired
