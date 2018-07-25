@@ -1,4 +1,4 @@
-package com.manuel.bootquartz.springbatch.employee;
+package com.manuel.bootquartz.springbatch.writer.preparedstatement;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

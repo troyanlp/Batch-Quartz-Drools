@@ -1,4 +1,4 @@
-package com.manuel.bootquartz.springbatch;
+package com.manuel.bootquartz.springbatch.writer.preparedstatement;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

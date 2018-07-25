@@ -1,4 +1,4 @@
-package com.manuel.bootquartz.springbatch.employee;
+package com.manuel.bootquartz.springbatch.reader;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,26 +11,27 @@ import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
 
-import com.manuel.bootquartz.model.Employee;
+import com.manuel.bootquartz.model.ExamResult;
+import com.manuel.bootquartz.springbatch.reader.linemapper.ExamResultLineMapper;
 
-public class EmployeeItemReader implements ItemReader<Employee> {
+public class ExamResultItemReader implements ItemReader<ExamResult> {
 
 	boolean loaded = false;
 	int lineNumber = 0;
 	ArrayList<String> fileContent;
 
 	@Override
-	public Employee read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+	public ExamResult read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
 		if (!loaded) {
 			setUp();
 		}
 		if (!fileContent.isEmpty()) {
-			EmployeeLineMapper lineMapper = new EmployeeLineMapper();
-			Employee employee = lineMapper.mapLine(fileContent.get(0), lineNumber);
-			// System.out.println(fileContent.get(0));
+			ExamResultLineMapper lineMapper = new ExamResultLineMapper();
+			ExamResult exam = lineMapper.mapLine(fileContent.get(0), lineNumber);
+			System.out.println(fileContent.get(0));
 			lineNumber++;
 			fileContent.remove(0);
-			return employee;
+			return exam;
 		} else {
 			fileContent.clear();
 			lineNumber = 0;
@@ -40,8 +41,8 @@ public class EmployeeItemReader implements ItemReader<Employee> {
 	}
 
 	public void setUp() throws IOException {
-		String fileName = "csv/employees2.txt";
-		ClassLoader classLoader = new EmployeeItemReader().getClass().getClassLoader();
+		String fileName = "csv/examResult.txt";
+		ClassLoader classLoader = new ExamResultItemReader().getClass().getClassLoader();
 		File file = new File(classLoader.getResource(fileName).getFile());
 
 		// File is found
@@ -54,13 +55,4 @@ public class EmployeeItemReader implements ItemReader<Employee> {
 		loaded = true;
 	}
 
-	// @BeforeRead
-	// public void beforeRead() {
-	// System.out.println("Antes de leer!");
-	// }
-	//
-	// @AfterRead
-	// public void afterRead() {
-	// System.out.println("Despues de leer!");
-	// }
 }

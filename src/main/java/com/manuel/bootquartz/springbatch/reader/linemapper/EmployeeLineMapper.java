@@ -1,4 +1,4 @@
-package com.manuel.bootquartz.springbatch.employee;
+package com.manuel.bootquartz.springbatch.reader.linemapper;
 
 import org.joda.time.LocalDate;
 import org.springframework.batch.item.file.LineMapper;

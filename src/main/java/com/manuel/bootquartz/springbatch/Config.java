@@ -38,13 +38,20 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.manuel.bootquartz.model.Employee;
 import com.manuel.bootquartz.model.ExamResult;
 import com.manuel.bootquartz.service.DroolsService;
-import com.manuel.bootquartz.springbatch.employee.EmployeeItemProcessor;
-import com.manuel.bootquartz.springbatch.employee.EmployeeItemProcessorListener;
-import com.manuel.bootquartz.springbatch.employee.EmployeeItemReader;
-import com.manuel.bootquartz.springbatch.employee.EmployeeItemReaderListener;
-import com.manuel.bootquartz.springbatch.employee.EmployeeItemWriterListener;
-import com.manuel.bootquartz.springbatch.employee.EmployeeJobListener;
-import com.manuel.bootquartz.springbatch.employee.EmployeePreparedStatementSetter;
+import com.manuel.bootquartz.springbatch.decider.MyDecider;
+import com.manuel.bootquartz.springbatch.listener.EmployeeItemProcessorListener;
+import com.manuel.bootquartz.springbatch.listener.EmployeeItemReaderListener;
+import com.manuel.bootquartz.springbatch.listener.EmployeeItemWriterListener;
+import com.manuel.bootquartz.springbatch.listener.EmployeeJobListener;
+import com.manuel.bootquartz.springbatch.listener.ExamResultJobListener;
+import com.manuel.bootquartz.springbatch.processor.EmployeeItemProcessor;
+import com.manuel.bootquartz.springbatch.processor.ExamResultItemProcessor;
+import com.manuel.bootquartz.springbatch.processor.ItemCatchProcessor;
+import com.manuel.bootquartz.springbatch.reader.EmployeeItemReader;
+import com.manuel.bootquartz.springbatch.reader.ExamResultItemReader;
+import com.manuel.bootquartz.springbatch.reader.NoOpItemReader;
+import com.manuel.bootquartz.springbatch.writer.preparedstatement.EmployeePreparedStatementSetter;
+import com.manuel.bootquartz.springbatch.writer.preparedstatement.ExamResultPreparedStatementSetter;
 
 @Configuration
 @EnableBatchProcessing
