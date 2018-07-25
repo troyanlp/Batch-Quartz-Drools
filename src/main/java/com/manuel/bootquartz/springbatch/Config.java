@@ -39,7 +39,10 @@ import com.manuel.bootquartz.model.Employee;
 import com.manuel.bootquartz.model.ExamResult;
 import com.manuel.bootquartz.service.DroolsService;
 import com.manuel.bootquartz.springbatch.employee.EmployeeItemProcessor;
+import com.manuel.bootquartz.springbatch.employee.EmployeeItemProcessorListener;
 import com.manuel.bootquartz.springbatch.employee.EmployeeItemReader;
+import com.manuel.bootquartz.springbatch.employee.EmployeeItemReaderListener;
+import com.manuel.bootquartz.springbatch.employee.EmployeeItemWriterListener;
 import com.manuel.bootquartz.springbatch.employee.EmployeeJobListener;
 import com.manuel.bootquartz.springbatch.employee.EmployeePreparedStatementSetter;
 
@@ -256,14 +259,30 @@ public class Config {
 	@Bean
 	public Step stepEmployee() {
 		return stepBuilderFactory.get("stepEmployee").allowStartIfComplete(true).<Employee, Employee>chunk(10)
-				.reader(EmployeeItemReader()).processor(employeeItemProcessor())
-				.writer(DatabaseEmployeeWriter(dataSource(), jdbcTemplate)).build();
+				.reader(EmployeeItemReader()).listener(employeeItemReaderListener()).processor(employeeItemProcessor())
+				.listener(employeeItemProcessorListener()).writer(DatabaseEmployeeWriter(dataSource(), jdbcTemplate))
+				.listener(employeeItemWriterListener()).build();
 	}
 
 	@Bean
 	public Job employeeJob() {
 		return jobBuilderFactory.get("employeeJob").incrementer(new RunIdIncrementer()).listener(employeeJobListener())
 				.start(stepEmployee()).build();
+	}
+
+	@Bean
+	public EmployeeItemReaderListener employeeItemReaderListener() {
+		return new EmployeeItemReaderListener();
+	}
+
+	@Bean
+	public EmployeeItemProcessorListener employeeItemProcessorListener() {
+		return new EmployeeItemProcessorListener();
+	}
+
+	@Bean
+	public EmployeeItemWriterListener employeeItemWriterListener() {
+		return new EmployeeItemWriterListener();
 	}
 
 	@Bean

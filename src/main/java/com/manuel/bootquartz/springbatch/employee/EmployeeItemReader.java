@@ -40,7 +40,7 @@ public class EmployeeItemReader implements ItemReader<Employee> {
 	}
 
 	public void setUp() throws IOException {
-		String fileName = "csv/employees.txt";
+		String fileName = "csv/employees2.txt";
 		ClassLoader classLoader = new EmployeeItemReader().getClass().getClassLoader();
 		File file = new File(classLoader.getResource(fileName).getFile());
 
@@ -54,4 +54,13 @@ public class EmployeeItemReader implements ItemReader<Employee> {
 		loaded = true;
 	}
 
+	// @BeforeRead
+	// public void beforeRead() {
+	// System.out.println("Antes de leer!");
+	// }
+	//
+	// @AfterRead
+	// public void afterRead() {
+	// System.out.println("Despues de leer!");
+	// }
 }
