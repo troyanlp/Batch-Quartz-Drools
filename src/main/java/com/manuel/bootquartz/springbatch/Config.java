@@ -10,8 +10,6 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.job.builder.FlowBuilder;
-import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
@@ -37,8 +35,13 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import com.manuel.bootquartz.model.Employee;
 import com.manuel.bootquartz.model.ExamResult;
 import com.manuel.bootquartz.service.DroolsService;
+import com.manuel.bootquartz.springbatch.employee.EmployeeItemProcessor;
+import com.manuel.bootquartz.springbatch.employee.EmployeeItemReader;
+import com.manuel.bootquartz.springbatch.employee.EmployeeJobListener;
+import com.manuel.bootquartz.springbatch.employee.EmployeePreparedStatementSetter;
 
 @Configuration
 @EnableBatchProcessing
@@ -87,6 +90,11 @@ public class Config {
 		return new ExamResultItemReader();
 	}
 
+	@Bean
+	public EmployeeItemReader EmployeeItemReader() {
+		return new EmployeeItemReader();
+	}
+
 	// END READER
 
 	// START WRITTER DB
@@ -108,6 +116,21 @@ public class Config {
 		databaseItemWriter.setSql("INSERT INTO exam_result(student_name, age, percentage) VALUES (?, ?, ?)");
 
 		ItemPreparedStatementSetter<ExamResult> valueSetter = new ExamResultPreparedStatementSetter();
+		databaseItemWriter.setItemPreparedStatementSetter(valueSetter);
+
+		return databaseItemWriter;
+	}
+
+	@Bean
+	ItemWriter<Employee> DatabaseEmployeeWriter(DataSource dataSource, NamedParameterJdbcTemplate jdbcTemplate) {
+		JdbcBatchItemWriter<Employee> databaseItemWriter = new JdbcBatchItemWriter<>();
+		databaseItemWriter.setDataSource(dataSource);
+		databaseItemWriter.setJdbcTemplate(jdbcTemplate);
+
+		databaseItemWriter.setSql(
+				"INSERT INTO employee(name, lastName, gender, dob, startDate, endDate, position, salary, restaurantTicket, growth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+		ItemPreparedStatementSetter<Employee> valueSetter = new EmployeePreparedStatementSetter();
 		databaseItemWriter.setItemPreparedStatementSetter(valueSetter);
 
 		return databaseItemWriter;
@@ -182,6 +205,11 @@ public class Config {
 	}
 
 	@Bean
+	public EmployeeJobListener employeeJobListener() {
+		return new EmployeeJobListener();
+	}
+
+	@Bean
 	public DroolsService droolsService() {
 		return new DroolsService();
 	}
@@ -189,6 +217,11 @@ public class Config {
 	@Bean
 	public ExamResultItemProcessor examResultItemProcessor() {
 		return new ExamResultItemProcessor();
+	}
+
+	@Bean
+	public EmployeeItemProcessor employeeItemProcessor() {
+		return new EmployeeItemProcessor();
 	}
 
 	@Bean
@@ -219,6 +252,19 @@ public class Config {
 	// .reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
 	// .build();
 	// }
+
+	@Bean
+	public Step stepEmployee() {
+		return stepBuilderFactory.get("stepEmployee").allowStartIfComplete(true).<Employee, Employee>chunk(10)
+				.reader(EmployeeItemReader()).processor(employeeItemProcessor())
+				.writer(DatabaseEmployeeWriter(dataSource(), jdbcTemplate)).build();
+	}
+
+	@Bean
+	public Job employeeJob() {
+		return jobBuilderFactory.get("employeeJob").incrementer(new RunIdIncrementer()).listener(employeeJobListener())
+				.start(stepEmployee()).build();
+	}
 
 	@Bean
 	public Step step1() {
@@ -258,19 +304,21 @@ public class Config {
 	// .listener(examResultJobListener).flow(step).end().build();
 	// }
 
-	@Bean
-	public Job examResultJob() {
-		Flow flow1 = new FlowBuilder<Flow>("Flow1").start(step1()).next(decider()) // Note 1
-				.on("XML").to(step3()).from(decider()) // Note 1
-				.on("DB").to(step2()).build();
-		// return jobBuilderFactory.get("examResultJob").incrementer(new
-		// RunIdIncrementer()).start(step1()).next(decider())
-		// .on("DB").to(step2()).next(decider()).on("*").to(step3()).end().build();
-		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer()).start(flow1).build().build();
-		// return jobBuilderFactory.get("examResultJob").incrementer(new
-		// RunIdIncrementer());
-		// .listener(examResultJobListener()).start(step1()).next(step2()).build();
-	}
+	// @Bean
+	// public Job examResultJob() {
+	// Flow flow1 = new FlowBuilder<Flow>("Flow1").start(step1()).next(decider()) //
+	// Note 1
+	// .on("XML").to(step3()).from(decider()) // Note 1
+	// .on("DB").to(step2()).build();
+	// // return jobBuilderFactory.get("examResultJob").incrementer(new
+	// // RunIdIncrementer()).start(step1()).next(decider())
+	// // .on("DB").to(step2()).next(decider()).on("*").to(step3()).end().build();
+	// return jobBuilderFactory.get("examResultJob").incrementer(new
+	// RunIdIncrementer()).start(flow1).build().build();
+	// // return jobBuilderFactory.get("examResultJob").incrementer(new
+	// // RunIdIncrementer());
+	// // .listener(examResultJobListener()).start(step1()).next(step2()).build();
+	// }
 
 	@Autowired
 	public MyDecider decider() {
