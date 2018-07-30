@@ -21,7 +21,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<start-class>com.kaviddiss.bootquartz.Application</start-class>
+		<start-class>com.manuel.bootquartz.QuartzMain</start-class>
 		<springframework.version>4.0.6.RELEASE</springframework.version>
         <springbatch.version>3.0.1.RELEASE</springbatch.version>
         <mysql.connector.version>5.1.31</mysql.connector.version>
@@ -48,11 +48,6 @@
 		    <artifactId>eclipselink</artifactId>
 		    <version>2.5.0</version>
 		</dependency>
-<!--         <dependency> -->
-<!-- 		    <groupId>org.springframework</groupId> -->
-<!-- 		    <artifactId>spring-core</artifactId> -->
-<!-- 		    <version>3.1.1.RELEASE</version> -->
-<!-- 		</dependency> -->
         
 		<!-- Includes spring's support classes for quartz -->
 		<dependency>

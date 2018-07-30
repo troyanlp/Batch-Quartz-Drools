@@ -1,6 +1,6 @@
 package rules
 
-import com.manuel.bootquartz.model.*
+import com.everis.bootquartz.model.*
 
 // Aprobamos a los que tienen 80 o más
 rule "Age rule"

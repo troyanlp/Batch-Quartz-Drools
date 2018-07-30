@@ -6,5 +6,5 @@ Implementation-Vendor-Id: com.kaviddiss
 Build-Jdk: 1.8.0_171
 Created-By: Maven Integration for Eclipse
 Implementation-Vendor: Pivotal Software, Inc.
-Main-Class: com.kaviddiss.bootquartz.Application
+Main-Class: com.manuel.bootquartz.QuartzMain
 

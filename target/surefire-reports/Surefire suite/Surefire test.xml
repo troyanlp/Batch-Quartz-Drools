@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite hostname="BCN-1QPPPH2" name="com.kaviddiss.bootquartz.ApplicationTest" tests="1" failures="0" timestamp="19 Jul 2018 11:49:20 GMT" time="13.292" errors="0">
-  <testcase name="test" time="5.063" classname="com.kaviddiss.bootquartz.ApplicationTest"/>
-</testsuite>

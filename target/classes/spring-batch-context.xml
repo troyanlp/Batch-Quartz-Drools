@@ -60,11 +60,11 @@
  
  
     <!-- Optional JobExecutionListener to perform business logic before and after the job -->
-    <bean id="jobListener" class="com.manuel.bootquartz.springbatch.ExamResultJobListener" />
-    <bean id="droolService" class="com.manuel.bootquartz.service.DroolsService" />
+    <bean id="jobListener" class="com.everis.bootquartz.springbatch.ExamResultJobListener" />
+    <bean id="droolService" class="com.everis.bootquartz.service.DroolsService" />
  
     <!-- Optional ItemProcessor to perform business logic/filtering on the input records -->
-    <bean id="itemProcessor" class="com.manuel.bootquartz.springbatch.ExamResultItemProcessor" />
+    <bean id="itemProcessor" class="com.everis.bootquartz.springbatch.ExamResultItemProcessor" />
  
     <!-- Step will need a transaction manager -->
     <bean id="transactionManager"
