@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.manuel.bootquartz.service.SampleService;
 
-public class SampleJob implements Job {
+public class QuartzJob implements Job {
 	@Autowired
 	private SampleService service;
 
@@ -32,10 +32,8 @@ public class SampleJob implements Job {
 					.toJobParameters();
 			JobExecution execution = jobLauncher.run(job, jobParameters);
 			System.out.println("Exit Status : " + execution.getStatus());
-			// jobLauncher.run(job, new JobParameters());
 		} catch (JobExecutionAlreadyRunningException | JobRestartException | JobInstanceAlreadyCompleteException
 				| JobParametersInvalidException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

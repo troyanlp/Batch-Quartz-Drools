@@ -45,14 +45,13 @@ public class ExamResultItemReader implements ItemReader<ExamResult> {
 		ClassLoader classLoader = new ExamResultItemReader().getClass().getClassLoader();
 		File file = new File(classLoader.getResource(fileName).getFile());
 
-		// File is found
-		System.out.println("File Found : " + file.exists());
+		if (file.exists()) {
+			// Read File Content
+			String content = new String(Files.readAllBytes(file.toPath()));
+			fileContent = new ArrayList<String>(Arrays.asList(content.split("\n")));
 
-		// Read File Content
-		String content = new String(Files.readAllBytes(file.toPath()));
-		fileContent = new ArrayList<String>(Arrays.asList(content.split("\n")));
-
-		loaded = true;
+			loaded = true;
+		}
 	}
 
 }

@@ -28,7 +28,6 @@ public class EmployeeItemReader implements ItemReader<Employee> {
 		if (!fileContent.isEmpty()) {
 			EmployeeLineMapper lineMapper = new EmployeeLineMapper();
 			Employee employee = lineMapper.mapLine(fileContent.get(0), lineNumber);
-			// System.out.println(fileContent.get(0));
 			lineNumber++;
 			fileContent.remove(0);
 			return employee;
@@ -41,27 +40,16 @@ public class EmployeeItemReader implements ItemReader<Employee> {
 	}
 
 	public void setUp() throws IOException {
-		String fileName = "csv/employees.txt";
+		String fileName = "csv/employees2.txt";
 		ClassLoader classLoader = new EmployeeItemReader().getClass().getClassLoader();
 		File file = new File(classLoader.getResource(fileName).getFile());
 
-		// File is found
-		System.out.println("File Found : " + file.exists());
+		if (file.exists()) {
+			// Read File Content
+			String content = new String(Files.readAllBytes(file.toPath()));
+			fileContent = new ArrayList<String>(Arrays.asList(content.split("\n")));
 
-		// Read File Content
-		String content = new String(Files.readAllBytes(file.toPath()));
-		fileContent = new ArrayList<String>(Arrays.asList(content.split("\n")));
-
-		loaded = true;
+			loaded = true;
+		}
 	}
-
-	// @BeforeRead
-	// public void beforeRead() {
-	// System.out.println("Antes de leer!");
-	// }
-	//
-	// @AfterRead
-	// public void afterRead() {
-	// System.out.println("Despues de leer!");
-	// }
 }

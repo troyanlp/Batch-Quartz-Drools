@@ -1,4 +1,4 @@
-package com.manuel.bootquartz.springbatch;
+package com.manuel.bootquartz.springbatch.config;
 
 import java.util.ArrayList;
 import java.util.List;

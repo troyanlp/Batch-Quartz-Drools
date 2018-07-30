@@ -1,4 +1,4 @@
-package com.manuel.bootquartz;
+package com.manuel.bootquartz.quartzconfig;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -26,7 +26,7 @@ import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean;
 
-import com.manuel.bootquartz.job.SampleJob;
+import com.manuel.bootquartz.job.QuartzJob;
 import com.manuel.bootquartz.spring.AutowiringSpringBeanJobFactory;
 
 import liquibase.integration.spring.SpringLiquibase;
@@ -83,7 +83,7 @@ public class SchedulerConfig {
 
 	@Bean
 	public JobDetailFactoryBean sampleJobDetail() {
-		return createJobDetail(SampleJob.class);
+		return createJobDetail(QuartzJob.class);
 	}
 
 	@Bean(name = "sampleJobTrigger")
@@ -104,7 +104,7 @@ public class SchedulerConfig {
 		SimpleTriggerFactoryBean factoryBean = new SimpleTriggerFactoryBean();
 		factoryBean.setJobDetail(jobDetail);
 		factoryBean.setStartDelay(5L);
-		factoryBean.setRepeatInterval(/* pollFrequencyMs */10000);
+		factoryBean.setRepeatInterval(pollFrequencyMs);
 		factoryBean.setRepeatCount(SimpleTrigger.REPEAT_INDEFINITELY);
 		// in case of misfire, ignore all missed triggers and continue :
 		factoryBean.setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT);
