@@ -254,14 +254,12 @@ public class Config {
 	// .reader(examResultItemReader).processor(examResultItemProcessor).writer(databaseItemWriter).build();
 	// }
 
-	// @Bean
-	// public Step step1() {
-	// return
-	// stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult,
-	// ExamResult>chunk(10)
-	// .reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
-	// .build();
-	// }
+	@Bean
+	public Step step() {
+		return stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
+				.build();
+	}
 
 	@Bean
 	public Step stepEmployee() {
@@ -271,11 +269,12 @@ public class Config {
 				.listener(employeeItemWriterListener()).build();
 	}
 
-	@Bean
-	public Job employeeJob() {
-		return jobBuilderFactory.get("employeeJob").incrementer(new RunIdIncrementer()).listener(employeeJobListener())
-				.start(stepEmployee()).build();
-	}
+	// @Bean
+	// public Job employeeJob() {
+	// return jobBuilderFactory.get("employeeJob").incrementer(new
+	// RunIdIncrementer()).listener(employeeJobListener())
+	// .start(stepEmployee()).build();
+	// }
 
 	@Bean
 	public EmployeeItemReaderListener employeeItemReaderListener() {
@@ -322,13 +321,11 @@ public class Config {
 				.writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
 	}
 
-	// @Bean
-	// public Job examResultJob(Step step, ExamResultJobListener
-	// examResultJobListener) {
-	// return jobBuilderFactory.get("examResultJob").incrementer(new
-	// RunIdIncrementer())
-	// .listener(examResultJobListener).flow(step).end().build();
-	// }
+	@Bean
+	public Job examResultJob(Step step, ExamResultJobListener examResultJobListener) {
+		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer())
+				.listener(examResultJobListener).flow(step()).end().build();
+	}
 
 	// @Bean
 	// public Job examResultJob() {
