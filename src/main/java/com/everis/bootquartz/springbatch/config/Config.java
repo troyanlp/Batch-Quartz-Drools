@@ -35,22 +35,14 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.everis.bootquartz.model.Employee;
 import com.everis.bootquartz.model.ExamResult;
 import com.everis.bootquartz.service.DroolsService;
 import com.everis.bootquartz.springbatch.decider.MyDecider;
-import com.everis.bootquartz.springbatch.listener.EmployeeItemProcessorListener;
-import com.everis.bootquartz.springbatch.listener.EmployeeItemReaderListener;
-import com.everis.bootquartz.springbatch.listener.EmployeeItemWriterListener;
-import com.everis.bootquartz.springbatch.listener.EmployeeJobListener;
 import com.everis.bootquartz.springbatch.listener.ExamResultJobListener;
-import com.everis.bootquartz.springbatch.processor.EmployeeItemProcessor;
 import com.everis.bootquartz.springbatch.processor.ExamResultItemProcessor;
 import com.everis.bootquartz.springbatch.processor.ItemCatchProcessor;
-import com.everis.bootquartz.springbatch.reader.EmployeeItemReader;
 import com.everis.bootquartz.springbatch.reader.ExamResultItemReader;
 import com.everis.bootquartz.springbatch.reader.NoOpItemReader;
-import com.everis.bootquartz.springbatch.writer.preparedstatement.EmployeePreparedStatementSetter;
 import com.everis.bootquartz.springbatch.writer.preparedstatement.ExamResultPreparedStatementSetter;
 
 @Configuration
@@ -62,9 +54,6 @@ public class Config {
 
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
-
-	// @Autowired
-	// public ResourcelessTransactionManager resourcelessTransactionManager;
 
 	@Autowired
 	private Environment env;
@@ -80,29 +69,11 @@ public class Config {
 		return dataSource;
 	}
 
-	// @Bean
-	// public JdbcCursorItemReader<ExamResult> databseItemReader(DataSource
-	// dataSource) {
-	// JdbcCursorItemReader<ExamResult> jdbcCursorItemReader = new
-	// JdbcCursorItemReader<>();
-	// jdbcCursorItemReader.setDataSource(dataSource);
-	// jdbcCursorItemReader.setSql("SELECT STUDENT_NAME, DOB, PERCENTAGE FROM
-	// EXAM_RESULT");
-	// jdbcCursorItemReader.setRowMapper(new ExamResultRowMapper());
-	// return jdbcCursorItemReader;
-	//
-	// }
-
 	// READER
 
 	@Bean
 	public ExamResultItemReader examResultItemReader() {
 		return new ExamResultItemReader();
-	}
-
-	@Bean
-	public EmployeeItemReader EmployeeItemReader() {
-		return new EmployeeItemReader();
 	}
 
 	// END READER
@@ -126,21 +97,6 @@ public class Config {
 		databaseItemWriter.setSql("INSERT INTO exam_result(student_name, age, percentage) VALUES (?, ?, ?)");
 
 		ItemPreparedStatementSetter<ExamResult> valueSetter = new ExamResultPreparedStatementSetter();
-		databaseItemWriter.setItemPreparedStatementSetter(valueSetter);
-
-		return databaseItemWriter;
-	}
-
-	@Bean
-	ItemWriter<Employee> DatabaseEmployeeWriter(DataSource dataSource, NamedParameterJdbcTemplate jdbcTemplate) {
-		JdbcBatchItemWriter<Employee> databaseItemWriter = new JdbcBatchItemWriter<>();
-		databaseItemWriter.setDataSource(dataSource);
-		databaseItemWriter.setJdbcTemplate(jdbcTemplate);
-
-		databaseItemWriter.setSql(
-				"INSERT INTO employee(name, lastName, gender, dob, startDate, endDate, position, salary, restaurantTicket, growth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-		ItemPreparedStatementSetter<Employee> valueSetter = new EmployeePreparedStatementSetter();
 		databaseItemWriter.setItemPreparedStatementSetter(valueSetter);
 
 		return databaseItemWriter;
@@ -215,11 +171,6 @@ public class Config {
 	}
 
 	@Bean
-	public EmployeeJobListener employeeJobListener() {
-		return new EmployeeJobListener();
-	}
-
-	@Bean
 	public DroolsService droolsService() {
 		return new DroolsService();
 	}
@@ -227,11 +178,6 @@ public class Config {
 	@Bean
 	public ExamResultItemProcessor examResultItemProcessor() {
 		return new ExamResultItemProcessor();
-	}
-
-	@Bean
-	public EmployeeItemProcessor employeeItemProcessor() {
-		return new EmployeeItemProcessor();
 	}
 
 	@Bean
@@ -244,51 +190,11 @@ public class Config {
 		return new ItemCatchProcessor();
 	}
 
-	// @Bean
-	// public Step step1(ExamResultItemReader examResultItemReader,
-	// ExamResultItemProcessor examResultItemProcessor,
-	// ItemWriter<ExamResult> databaseItemWriter) {
-	// return
-	// stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult,
-	// ExamResult>chunk(10)
-	// .reader(examResultItemReader).processor(examResultItemProcessor).writer(databaseItemWriter).build();
-	// }
-
 	@Bean
 	public Step step() {
 		return stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
 				.build();
-	}
-
-	@Bean
-	public Step stepEmployee() {
-		return stepBuilderFactory.get("stepEmployee").allowStartIfComplete(true).<Employee, Employee>chunk(10)
-				.reader(EmployeeItemReader()).listener(employeeItemReaderListener()).processor(employeeItemProcessor())
-				.listener(employeeItemProcessorListener()).writer(DatabaseEmployeeWriter(dataSource(), jdbcTemplate))
-				.listener(employeeItemWriterListener()).build();
-	}
-
-	// @Bean
-	// public Job employeeJob() {
-	// return jobBuilderFactory.get("employeeJob").incrementer(new
-	// RunIdIncrementer()).listener(employeeJobListener())
-	// .start(stepEmployee()).build();
-	// }
-
-	@Bean
-	public EmployeeItemReaderListener employeeItemReaderListener() {
-		return new EmployeeItemReaderListener();
-	}
-
-	@Bean
-	public EmployeeItemProcessorListener employeeItemProcessorListener() {
-		return new EmployeeItemProcessorListener();
-	}
-
-	@Bean
-	public EmployeeItemWriterListener employeeItemWriterListener() {
-		return new EmployeeItemWriterListener();
 	}
 
 	@Bean
