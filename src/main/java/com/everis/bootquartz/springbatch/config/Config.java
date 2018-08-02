@@ -227,12 +227,19 @@ public class Config {
 				.writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
 	}
 
-	@Bean
+	@Bean(name = "examResultJob")
 	public Job examResultJob() {
 		MyDecider decider = new MyDecider();
 		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer())
 				.listener(examResultJobListener()).start(step1()).next(decider).on("XML").to(step2()).next(decider)
 				.on("DB").to(step3()).end().build();
+	}
+
+	@Bean(name = "resultJob")
+	public Job resultJob() {
+		MyDecider decider = new MyDecider();
+		return jobBuilderFactory.get("resultJob").incrementer(new RunIdIncrementer()).listener(examResultJobListener())
+				.start(step1()).next(decider).on("XML").to(step2()).next(decider).on("DB").to(step3()).end().build();
 	}
 
 	@Autowired
