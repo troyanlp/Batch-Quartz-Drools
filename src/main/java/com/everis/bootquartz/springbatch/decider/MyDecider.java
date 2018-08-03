@@ -15,15 +15,21 @@ public class MyDecider implements JobExecutionDecider {
 			status = (String) stepExecution.getExecutionContext().get("writingMode");
 		if (status.compareTo("XML") == 0) {
 			System.out.println("------------------------------");
-			System.out.println("Completed -> Go to step 2");
+			System.out.println("Completed -> Go to step XML");
 			System.out.println("------------------------------");
 			status = "XML";
 			// return FlowExecutionStatus.COMPLETED;
 		} else if (status.compareTo("DB") == 0) {
 			System.out.println("------------------------------");
-			System.out.println("Completed -> Go to step 3");
+			System.out.println("Completed -> Go to step DB");
 			System.out.println("------------------------------");
 			status = "DB";
+			// return FlowExecutionStatus.FAILED;
+		} else if (status.compareTo("CVS") == 0) {
+			System.out.println("------------------------------");
+			System.out.println("Completed -> Go to step CVS");
+			System.out.println("------------------------------");
+			status = "CVS";
 			// return FlowExecutionStatus.FAILED;
 		}
 

@@ -49,7 +49,7 @@ public class ExamResultItemProcessor implements ItemProcessor<ExamResult, ExamRe
 	public void putData() {
 		ExecutionContext stepContext = this.stepExecution.getExecutionContext();
 		stepContext.put("results", results);
-		stepContext.put("writingMode", "DB");
+		stepContext.put("writingMode", "CVS");
 	}
 
 }

@@ -28,7 +28,7 @@ public class QuartzJob implements Job {
 	public JobBuilderFactory jobBuilderFactory;
 
 	@Autowired
-	@Qualifier("examResultJob")
+	@Qualifier("deciderJob")
 	org.springframework.batch.core.Job job;
 
 	@Autowired
@@ -40,8 +40,6 @@ public class QuartzJob implements Job {
 		try {
 			JobParameters jobParameters = new JobParametersBuilder().addLong("time", System.currentTimeMillis())
 					.toJobParameters();
-			System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-			System.out.println(jobLocator.getJobNames().size());
 			JobExecution execution = jobLauncher.run(job, jobParameters);
 			System.out.println("Exit Status : " + execution.getStatus());
 		} catch (JobExecutionAlreadyRunningException | JobRestartException | JobInstanceAlreadyCompleteException

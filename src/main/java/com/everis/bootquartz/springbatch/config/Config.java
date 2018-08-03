@@ -191,14 +191,14 @@ public class Config {
 	}
 
 	@Bean
-	public Step step() {
-		return stepBuilderFactory.get("step1").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+	public Step compositeStep() {
+		return stepBuilderFactory.get("stepComposite").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
 				.build();
 	}
 
 	@Bean
-	public Step step1() {
+	public Step initialStep() {
 		return stepBuilderFactory.get("Initial Step").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(examResultItemReader()).processor(examResultItemProcessor()).listener(promotionListener())
 				.build();
@@ -214,32 +214,37 @@ public class Config {
 	}
 
 	@Bean
-	public Step step2() {
+	public Step cvsStep() {
+		return stepBuilderFactory.get("CVSStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(flatFileItemWriter())
+				.build();
+	}
+
+	@Bean
+	public Step xmlStep() {
 		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(userUnmarshaller()).build();
 	}
 
-	//
 	@Bean
-	public Step step3() {
+	public Step databaseStep() {
 		return stepBuilderFactory.get("DBStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(noOpItemReader()).processor(itemCatchProcessor())
 				.writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
 	}
 
-	@Bean(name = "examResultJob")
-	public Job examResultJob() {
-		MyDecider decider = new MyDecider();
-		return jobBuilderFactory.get("examResultJob").incrementer(new RunIdIncrementer())
-				.listener(examResultJobListener()).start(step1()).next(decider).on("XML").to(step2()).next(decider)
-				.on("DB").to(step3()).end().build();
+	@Bean(name = "singleStepJob")
+	public Job singleStepJob() {
+		return jobBuilderFactory.get("singleStepJob").incrementer(new RunIdIncrementer())
+				.listener(examResultJobListener()).start(compositeStep()).build();
 	}
 
-	@Bean(name = "resultJob")
-	public Job resultJob() {
+	@Bean(name = "deciderJob")
+	public Job deciderJob() {
 		MyDecider decider = new MyDecider();
-		return jobBuilderFactory.get("resultJob").incrementer(new RunIdIncrementer()).listener(examResultJobListener())
-				.start(step1()).next(decider).on("XML").to(step2()).next(decider).on("DB").to(step3()).end().build();
+		return jobBuilderFactory.get("deciderJob").incrementer(new RunIdIncrementer()).listener(examResultJobListener())
+				.start(initialStep()).next(decider).on("XML").to(xmlStep()).next(decider).on("DB").to(databaseStep())
+				.next(decider).on("CVS").to(cvsStep()).end().build();
 	}
 
 	@Autowired
