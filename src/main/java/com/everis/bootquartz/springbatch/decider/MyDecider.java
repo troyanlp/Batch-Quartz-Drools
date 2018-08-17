@@ -16,8 +16,8 @@ public class MyDecider implements JobExecutionDecider {
 
 	@Override
 	public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
-		if (status == null)
-			status = (String) stepExecution.getExecutionContext().get("writingMode");
+		// if (status == null)
+		status = (String) stepExecution.getExecutionContext().get("writingMode");
 
 		if (results == null)
 			results = (List<ExamResult>) stepExecution.getExecutionContext().get("results");
@@ -38,10 +38,10 @@ public class MyDecider implements JobExecutionDecider {
 		// }
 		// // results.remove(0);
 		// } else if (results.isEmpty()) {
-		// status = "END";
+		// FlowExecutionStatus flow = new FlowExecutionStatus("END");
 		// }
-		//
-		// status = "CSV";
+
+		status = "XML";
 
 		if (status.compareTo("XML") == 0) {
 			System.out.println("------------------------------");

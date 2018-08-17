@@ -271,19 +271,19 @@ public class Config {
 
 	@Bean
 	public Step cvsStep() {
-		return stepBuilderFactory.get("CVSStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
+		return stepBuilderFactory.get("CVSStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(flatFileItemWriter()).build();
 	}
 
 	@Bean
 	public Step xmlStep() {
-		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
+		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(userUnmarshaller()).build();
 	}
 
 	@Bean
 	public Step databaseStep() {
-		return stepBuilderFactory.get("DBStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
+		return stepBuilderFactory.get("DBStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
 				.reader(noOpItemReader()).processor(itemCatchProcessor())
 				.writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
 	}
@@ -299,8 +299,8 @@ public class Config {
 	public Job deciderJob() {
 		MyDecider decider = new MyDecider();
 		return jobBuilderFactory.get("deciderJob").incrementer(new RunIdIncrementer()).listener(examResultJobListener())
-				.start(initialStep()).next(decider).on("XML").to(xmlStep()).next(decider).on("DB").to(databaseStep())
-				.next(decider).on("CSV").to(cvsStep()).next(decider).on("END").end().build().build();
+				.start(initialStep()).next(decider).on("XML").to(xmlStep()).from(decider).on("DB").to(databaseStep())
+				.from(decider).on("CSV").to(cvsStep()).end().build();
 	}
 
 	@Autowired

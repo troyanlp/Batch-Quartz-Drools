@@ -21,6 +21,7 @@ public class NoOpItemReader implements ItemReader<ExamResult> {
 	@Override
 	public ExamResult read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
 		System.out.println("A leer!");
+		System.out.println(resultList.size());
 		if (!resultList.isEmpty()) {
 			lineNumber++;
 			ExamResult exam = resultList.get(0);
@@ -29,6 +30,8 @@ public class NoOpItemReader implements ItemReader<ExamResult> {
 		} else {
 			resultList.clear();
 			lineNumber = 0;
+			System.out.println("Vacio!");
+			// this.stepExecution.setExitStatus(ExitStatus.COMPLETED);
 			return null;
 		}
 	}
@@ -41,5 +44,11 @@ public class NoOpItemReader implements ItemReader<ExamResult> {
 		resultList = (ArrayList<ExamResult>) jobContext.get("results");
 		System.out.println("Before Step");
 	}
+
+	// @AfterStep
+	// public void putData() {
+	// ExecutionContext stepContext = this.stepExecution.getExecutionContext();
+	// stepContext.put("status", "END");
+	// }
 
 }
