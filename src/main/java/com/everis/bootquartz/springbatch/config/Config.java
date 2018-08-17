@@ -15,18 +15,27 @@ import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.ItemPreparedStatementSetter;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
+import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.LineMapper;
+import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.LineTokenizer;
 import org.springframework.batch.item.support.CompositeItemWriter;
 import org.springframework.batch.item.xml.StaxEventItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -42,6 +51,7 @@ import com.everis.bootquartz.springbatch.listener.ExamResultJobListener;
 import com.everis.bootquartz.springbatch.processor.ExamResultItemProcessor;
 import com.everis.bootquartz.springbatch.processor.ItemCatchProcessor;
 import com.everis.bootquartz.springbatch.reader.ExamResultItemReader;
+import com.everis.bootquartz.springbatch.reader.ExamResultMapper;
 import com.everis.bootquartz.springbatch.reader.NoOpItemReader;
 import com.everis.bootquartz.springbatch.writer.preparedstatement.ExamResultPreparedStatementSetter;
 
@@ -63,7 +73,7 @@ public class Config {
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
 		dataSource.setUrl(
-				"jdbc:mysql://localhost:3306/test?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
+				"jdbc:mysql://localhost:3306/test?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false");
 		dataSource.setUsername("root");
 		dataSource.setPassword("root");
 		return dataSource;
@@ -74,6 +84,54 @@ public class Config {
 	@Bean
 	public ExamResultItemReader examResultItemReader() {
 		return new ExamResultItemReader();
+	}
+
+	// @Bean
+	// public ExamResultLineMapper examResultLineMapper() {
+	// return new ExamResultLineMapper();
+	// }
+
+	@Bean
+	public ExamResultMapper examResultMapper() {
+		return new ExamResultMapper();
+	}
+
+	@Bean
+	ItemReader<ExamResult> csvFileItemReader() {
+		FlatFileItemReader<ExamResult> csvFileReader = new FlatFileItemReader<>();
+		csvFileReader.setResource(new ClassPathResource("csv/examResult.txt"));
+		csvFileReader.setLinesToSkip(0);
+
+		LineMapper<ExamResult> studentLineMapper = createStudentLineMapper();
+		csvFileReader.setLineMapper(studentLineMapper);
+
+		return csvFileReader;
+	}
+
+	private LineMapper<ExamResult> createStudentLineMapper() {
+		DefaultLineMapper<ExamResult> studentLineMapper = new DefaultLineMapper<>();
+
+		LineTokenizer studentLineTokenizer = createStudentLineTokenizer();
+		studentLineMapper.setLineTokenizer(studentLineTokenizer);
+
+		FieldSetMapper<ExamResult> studentInformationMapper = createStudentInformationMapper();
+		studentLineMapper.setFieldSetMapper(examResultMapper());
+
+		return studentLineMapper;
+	}
+
+	private LineTokenizer createStudentLineTokenizer() {
+		DelimitedLineTokenizer studentLineTokenizer = new DelimitedLineTokenizer();
+		studentLineTokenizer.setDelimiter(",");
+		studentLineTokenizer.setNames(new String[] { "studentName", "dob", "percentage" });
+		return studentLineTokenizer;
+	}
+
+	private FieldSetMapper<ExamResult> createStudentInformationMapper() {
+		BeanWrapperFieldSetMapper<ExamResult> studentInformationMapper = new BeanWrapperFieldSetMapper<>();
+		studentInformationMapper.setTargetType(ExamResult.class);
+		// studentInformationMapper.setCustomEditors(customEditors);
+		return studentInformationMapper;
 	}
 
 	// END READER
@@ -193,15 +251,13 @@ public class Config {
 	@Bean
 	public Step compositeStep() {
 		return stepBuilderFactory.get("stepComposite").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
-				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter())
-				.build();
+				.reader(csvFileItemReader()).processor(examResultItemProcessor()).writer(compositeItemWriter()).build();
 	}
 
 	@Bean
 	public Step initialStep() {
-		return stepBuilderFactory.get("Initial Step").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
-				.reader(examResultItemReader()).processor(examResultItemProcessor()).listener(promotionListener())
-				.build();
+		return stepBuilderFactory.get("Initial Step").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
+				.reader(csvFileItemReader()).processor(examResultItemProcessor()).listener(promotionListener()).build();
 	}
 
 	@Bean
@@ -215,36 +271,36 @@ public class Config {
 
 	@Bean
 	public Step cvsStep() {
-		return stepBuilderFactory.get("CVSStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
-				.reader(examResultItemReader()).processor(examResultItemProcessor()).writer(flatFileItemWriter())
-				.build();
+		return stepBuilderFactory.get("CVSStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
+				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(flatFileItemWriter()).build();
 	}
 
 	@Bean
 	public Step xmlStep() {
-		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+		return stepBuilderFactory.get("XMLStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
 				.reader(noOpItemReader()).processor(itemCatchProcessor()).writer(userUnmarshaller()).build();
 	}
 
 	@Bean
 	public Step databaseStep() {
-		return stepBuilderFactory.get("DBStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(10)
+		return stepBuilderFactory.get("DBStep").allowStartIfComplete(true).<ExamResult, ExamResult>chunk(1)
 				.reader(noOpItemReader()).processor(itemCatchProcessor())
 				.writer(DatabaseItemWriter(dataSource(), jdbcTemplate)).build();
 	}
 
-	@Bean(name = "singleStepJob")
-	public Job singleStepJob() {
-		return jobBuilderFactory.get("singleStepJob").incrementer(new RunIdIncrementer())
-				.listener(examResultJobListener()).start(compositeStep()).build();
-	}
+	// @Bean(name = "singleStepJob")
+	// public Job singleStepJob() {
+	// return jobBuilderFactory.get("singleStepJob").incrementer(new
+	// RunIdIncrementer())
+	// .listener(examResultJobListener()).start(compositeStep()).build();
+	// }
 
 	@Bean(name = "deciderJob")
 	public Job deciderJob() {
 		MyDecider decider = new MyDecider();
 		return jobBuilderFactory.get("deciderJob").incrementer(new RunIdIncrementer()).listener(examResultJobListener())
 				.start(initialStep()).next(decider).on("XML").to(xmlStep()).next(decider).on("DB").to(databaseStep())
-				.next(decider).on("CVS").to(cvsStep()).end().build();
+				.next(decider).on("CSV").to(cvsStep()).next(decider).on("END").end().build().build();
 	}
 
 	@Autowired

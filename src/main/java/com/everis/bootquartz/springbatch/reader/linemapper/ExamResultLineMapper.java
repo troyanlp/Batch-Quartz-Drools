@@ -9,7 +9,6 @@ public class ExamResultLineMapper implements LineMapper<ExamResult> {
 
 	@Override
 	public ExamResult mapLine(String line, int lineNumber) throws Exception {
-		// TODO Auto-generated method stub
 		ExamResult result = new ExamResult();
 		String[] content = line.split(",");
 		result.setStudentName(content[0]);

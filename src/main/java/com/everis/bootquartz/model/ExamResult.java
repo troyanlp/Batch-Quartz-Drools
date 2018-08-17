@@ -16,6 +16,10 @@ public class ExamResult {
 	private int age = 0;
 	private boolean milenial = false;
 
+	public ExamResult() {
+
+	}
+
 	@XmlElement(name = "StudentName")
 	public String getStudentName() {
 		return studentName;
@@ -33,7 +37,6 @@ public class ExamResult {
 	public void setDob(LocalDate dob) {
 		this.dob = dob;
 		if (dob.getYear() >= 1984 && dob.getYear() <= 2000) {
-			System.out.println("HA NACIDO UN MILENIAL!");
 			milenial = true;
 		} else {
 			milenial = false;
@@ -72,7 +75,6 @@ public class ExamResult {
 	}
 
 	public void addMilenialBonus(int extra) {
-		System.out.println("MILENIAL!");
 		percentage += extra;
 		if (percentage >= 100)
 			percentage = 100;
